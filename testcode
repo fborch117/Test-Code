@@ -1,0 +1,67 @@
+down_url<-'https://www.ers.usda.gov/webdocs/DataFiles/82701/Rural_Atlas_Update23.zip?v=1869'
+down_path<-file.path(getwd(),"/data.zip")
+download.file(down_url,down_path, mode="wb")
+
+#Load Sheets Into R
+##I will also unzip the file into a new folder.
+
+zip_file<-'N:/R/Work/RISI/risi_analyst_exercise/data.zip'
+unzip_dir<-"N:/R/Work/RISI/risi_analyst_exercise"
+unzip(zip_file,exdir=unzip_dir)
+
+file.remove("N:/R/Work/RISI/risi_analyst_exercise/Release23_June2021/RuralAtlasData23.xlsx") ##Instructional xlsx that I didn't want interfering. 
+
+#Removing White Space from file names so I can use them in a loop and as dataframe names.
+
+folder_dir<-"N:/R/Work/RISI/risi_analyst_exercise/Release23_June2021"
+
+files_space<-list.files(folder_dir,pattern=' ',full.names=TRUE)
+
+files_no_space<-stri_replace_all_fixed(files_space,pattern=' ','')
+
+# or gsub.Arguments seem more intuitive for stringi. files_no_space<-gsub('\\s','',files_space)
+
+#Pasting new file names into folder without spaces and removing old files
+
+file.copy(from=files_space, to=files_no_space)
+
+file.remove(files_space)
+
+#Creating a list of all csv files within the unzipped folder
+
+csv_list<-list.files(folder_dir,pattern="*.csv")
+csv_list_short<-sub('\\.csv$','',csv_list)
+dir_list<-list.files(folder_dir,full.names=TRUE)
+
+#Creating a loop to load each csv into R instead of doing the same process six times.
+
+for(i in 1:length(csv_list)){
+  assign(csv_list[i], read.csv(file.path(folder_dir,'/',csv_list[i])))
+}
+
+##Creating individual column names
+##Creating a new dataframe so that I can easily amend with cleaned data using rbind.
+
+csv_colnames<-scan(text=colnames(CountyClassifications.csv),what='',sep='.')
+# CountyClassifications.csv[csv_colnames] <- NA
+CountyClassifications<-data.frame()
+
+##Extracting data from each row and entering it into each column. Creating a base case so that the column names match.
+
+csv_rowdata<-CountyClassifications.csv[1:1,1]
+csv_rownames<-scan(text=csv_rowdata,what='',sep='\t')
+csv_row<-as.data.frame(do.call(cbind,as.list(csv_rownames)))
+colnames(csv_row)<-colnames(CountyClassifications)
+
+## For loop that iterates through each of the 3225 rows. It selects the text from each row, separates it into
+## individual parts, turns it into a data frame, and then binds it to an originally empty data frame row by row. 
+
+for(i in 1:3225){
+  csv_rowdata<-CountyClassifications.csv[i:i,1]
+  csv_rownames<-scan(text=csv_rowdata,what='',sep='\t',quote='')
+  csv_row<-as.data.frame(do.call(cbind,as.list(csv_rownames)))
+  CountyClassifications<-rbind(CountyClassifications,csv_row)
+  }
+
+##Colnames got messy after rbind
+colnames(CountyClassifications)<-csv_colnames
