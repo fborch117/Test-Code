@@ -1,3 +1,7 @@
+library(snakecase)
+library(stringi)
+library(tools)
+
 down_url<-'https://www.ers.usda.gov/webdocs/DataFiles/82701/Rural_Atlas_Update23.zip?v=1869'
 down_path<-file.path(getwd(),"/data.zip")
 download.file(down_url,down_path, mode="wb")
@@ -8,8 +12,6 @@ download.file(down_url,down_path, mode="wb")
 zip_file<-'N:/R/Work/RISI/risi_analyst_exercise/data.zip'
 unzip_dir<-"N:/R/Work/RISI/risi_analyst_exercise"
 unzip(zip_file,exdir=unzip_dir)
-
-file.remove("N:/R/Work/RISI/risi_analyst_exercise/Release23_June2021/RuralAtlasData23.xlsx") ##Instructional xlsx that I didn't want interfering. 
 
 #Removing White Space from file names so I can use them in a loop and as dataframe names.
 
@@ -51,7 +53,6 @@ CountyClassifications<-data.frame()
 csv_rowdata<-CountyClassifications.csv[1:1,1]
 csv_rownames<-scan(text=csv_rowdata,what='',sep='\t')
 csv_row<-as.data.frame(do.call(cbind,as.list(csv_rownames)))
-colnames(csv_row)<-colnames(CountyClassifications)
 
 ## For loop that iterates through each of the 3225 rows. It selects the text from each row, separates it into
 ## individual parts, turns it into a data frame, and then binds it to an originally empty data frame row by row. 
